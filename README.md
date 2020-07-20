@@ -1,2 +1,2 @@
 # pgparser
-a sql parser for postgres using golang from cockroachdb 
+A SQL Parser for postgres using golang from Cockroachdb 
