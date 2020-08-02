@@ -19,8 +19,8 @@ import (
 	"unicode/utf8"
 	"unsafe"
 
-	"github.com/ruiaylin/pgparser/lex"
 	"github.com/ruiaylin/pgparser/ast"
+	"github.com/ruiaylin/pgparser/lex"
 )
 
 const eof = -1
@@ -42,6 +42,20 @@ func makeScanner(str string) scanner {
 	s.init(str)
 	return s
 }
+
+func makeScanner1(str []byte]) scanner {
+	var s scanner
+	s.init1(str)
+	return s
+}
+
+func (s *scanner) init1(str []byte]) {
+	s.in = str
+	s.pos = 0
+	// Preallocate some buffer space for identifiers etc.
+	s.bytesPrealloc = make([]byte, len(str))
+}
+
 
 func (s *scanner) init(str string) {
 	s.in = str
@@ -973,7 +987,7 @@ outer:
 // SplitFirstStatement returns the length of the prefix of the string up to and
 // including the first semicolon that separates statements. If there is no
 // semicolon, returns ok=false.
-func SplitFirstStatement(sql string) (pos int, ok bool) {
+func SplitFirstStatement(sql []byte) (pos int, ok bool) {
 	s := makeScanner(sql)
 	var lval sqlSymType
 	for {
