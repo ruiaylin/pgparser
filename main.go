@@ -5,15 +5,40 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
+	_ "net/http/pprof"
+	"os"
+	"reflect"
+	"strconv"
+
 	"github.com/ruiaylin/pgparser/ast"
 	parser "github.com/ruiaylin/pgparser/parser"
-	"reflect"
-	"strings"
 
 	"github.com/cockroachdb/errors"
 )
 
+func initPprofMonitor() error {
+	pPort := 8082
+
+	var err error
+	addr := ":" + strconv.Itoa(pPort)
+
+	fmt.Println("jajajja")
+	go func() {
+		err = http.ListenAndServe(addr, nil)
+		if err != nil {
+			fmt.Printf("funcRetErr=http.ListenAndServe||err=%s\n", err.Error())
+		}
+	}()
+
+	return err
+}
+
 func main() {
+
+	// 启动 pprof 监控
+	initPprofMonitor()
+
 	sql := `select name from t1 full join t2 on t1.num = t2.num; alter table ttt add column1 varchar(10);
 	select name2 from t1 full join t2 on t1.num = t2.num; 
 	alter table ttt add column2 varchar(10);
@@ -55,7 +80,21 @@ func main() {
 	}
 
 	//
-	rd := bufio.NewReader(strings.NewReader(sql))
+	file, err := os.Open("/Users/linruichao/data.sql")
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	defer file.Close()
+
+	f, err := os.OpenFile("/Users/linruichao/Development/go/pgparser/data-out.sql", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
+	if err != nil {
+		fmt.Println("os OpenFile error: ", err)
+		return
+	}
+	defer f.Close()
+
+	rd := bufio.NewReader(file)
 	stream := NewStream(rd)
 
 	for {
@@ -68,7 +107,8 @@ func main() {
 		}
 		switch node := stmt.(type) {
 		default:
-			fmt.Println("stream: ", reflect.TypeOf(node), node)
+			f.WriteString("stream: " + reflect.TypeOf(node).String() + " " + node.String() + "\n")
+			// fmt.Println("stream: ", reflect.TypeOf(node), node)
 		}
 	}
 }
@@ -94,7 +134,7 @@ func splitSQLSemicolon(data []byte, atEOF bool) (advance int, token []byte, err 
 		return 0, nil, nil
 	}
 
-	if pos, ok := parser.SplitFirstStatement(string(data)); ok {
+	if pos, ok := parser.SplitFirstStatement(data); ok {
 
 		return pos, data[:pos], nil
 	}
@@ -110,7 +150,7 @@ func splitSQLSemicolon(data []byte, atEOF bool) (advance int, token []byte, err 
 func (s *Stream) Next() (ast.Statement, error) {
 	for s.scan.Scan() {
 		t := s.scan.Text()
-		fmt.Println("origin sql = ", strings.Trim(t, "\n"))
+		// fmt.Println("origin sql = ", strings.Trim(t, "\n"))
 		stmts, err := parser.Parse(t)
 		if err != nil {
 			return nil, err
