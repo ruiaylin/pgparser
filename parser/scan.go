@@ -49,7 +49,7 @@ func makeScanner1(str []byte]) scanner {
 	return s
 }
 
-func (s *scanner) init1(str []byte]) {
+func (s *scanner) init1(str []byte) {
 	s.in = str
 	s.pos = 0
 	// Preallocate some buffer space for identifiers etc.
