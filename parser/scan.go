@@ -973,7 +973,7 @@ outer:
 // SplitFirstStatement returns the length of the prefix of the string up to and
 // including the first semicolon that separates statements. If there is no
 // semicolon, returns ok=false.
-func SplitFirstStatement(sql []byte) (pos int, ok bool) {
+func SplitFirstStatement(sql string) (pos int, ok bool) {
 	s := makeScanner(sql)
 	var lval sqlSymType
 	for {
