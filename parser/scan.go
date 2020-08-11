@@ -43,20 +43,6 @@ func makeScanner(str string) scanner {
 	return s
 }
 
-func makeScanner1(str []byte]) scanner {
-	var s scanner
-	s.init1(str)
-	return s
-}
-
-func (s *scanner) init1(str []byte) {
-	s.in = str
-	s.pos = 0
-	// Preallocate some buffer space for identifiers etc.
-	s.bytesPrealloc = make([]byte, len(str))
-}
-
-
 func (s *scanner) init(str string) {
 	s.in = str
 	s.pos = 0
